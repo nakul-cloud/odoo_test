@@ -51,3 +51,11 @@ package.json
 /man/
 /share/
 /src/
+
+# local virtualenvs and logs
+/venv/
+/.venv/
+odoo_init.log
+
+# avoid accidental duplicate addon in core addons
+/addons/lead_generation/
