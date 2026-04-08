@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Lead Form View -->
+        <record id="lead_generation_form" model="ir.ui.view">
+            <field name="name">lead.generation.form</field>
+            <field name="model">lead.generation</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <div class="oe_title">
+                            <h1>
+                                <field name="name"/>
+                            </h1>
+                        </div>
+                        <group>
+                            <group>
+                                <field name="email"/>
+                                <field name="phone"/>
+                                <field name="company"/>
+                            </group>
+                            <group>
+                                <field name="lead_source"/>
+                                <field name="status"/>
+                                <field name="active"/>
+                            </group>
+                        </group>
+                        <group>
+                            <group>
+                                <field name="budget"/>
+                                <field name="expected_closing_date"/>
+                            </group>
+                        </group>
+                        <field name="notes" placeholder="Add notes about this lead..."/>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Lead Tree (List) View -->
+        <record id="lead_generation_tree" model="ir.ui.view">
+            <field name="name">lead.generation.tree</field>
+            <field name="model">lead.generation</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="email"/>
+                    <field name="phone"/>
+                    <field name="lead_source"/>
+                    <field name="status"/>
+                    <field name="budget"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Lead Search View -->
+        <record id="lead_generation_search" model="ir.ui.view">
+            <field name="name">lead.generation.search</field>
+            <field name="model">lead.generation</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="name" string="Lead Name"/>
+                    <field name="email"/>
+                    <field name="phone"/>
+                    <field name="company"/>
+                    <separator/>
+                    <filter name="filter_new" string="New" domain="[('status', '=', 'new')]"/>
+                    <filter name="filter_contacted" string="Contacted" domain="[('status', '=', 'contacted')]"/>
+                    <filter name="filter_qualified" string="Qualified" domain="[('status', '=', 'qualified')]"/>
+                    <filter name="filter_won" string="Won" domain="[('status', '=', 'won')]"/>
+                    <filter name="filter_lost" string="Lost" domain="[('status', '=', 'lost')]"/>
+                    <separator/>
+                    <group expand="0" string="Group By">
+                        <filter name="group_by_status" string="Status" context="{'group_by': 'status'}"/>
+                        <filter name="group_by_lead_source" string="Lead Source" context="{'group_by': 'lead_source'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <!-- Lead Action Window -->
+        <record id="action_lead_generation" model="ir.actions.act_window">
+            <field name="name">Leads</field>
+            <field name="res_model">lead.generation</field>
+            <field name="view_mode">tree,form</field>
+            <field name="search_view_id" ref="lead_generation_search"/>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    No leads found. Create a new lead to get started!
+                </p>
+            </field>
+        </record>
+
+        <!-- Menu Items -->
+        <menuitem id="menu_lead_generation_root" name="Lead Generation" 
+                  sequence="50" web_icon="lead_generation,static/description/icon.png"/>
+        
+        <menuitem id="menu_lead_generation_leads" name="Leads"
+                  parent="menu_lead_generation_root"
+                  action="action_lead_generation"
+                  sequence="10"/>
+    </data>
+</odoo>
