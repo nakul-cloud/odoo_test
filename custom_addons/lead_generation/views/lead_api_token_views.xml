@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="lead_api_token_tree" model="ir.ui.view">
+            <field name="name">lead.api.token.tree</field>
+            <field name="model">lead.api.token</field>
+            <field name="arch" type="xml">
+                <list>
+                    <field name="name"/>
+                    <field name="user_id"/>
+                    <field name="scopes"/>
+                    <field name="is_active"/>
+                    <field name="last_used"/>
+                    <field name="api_calls_count"/>
+                    <field name="expires_at"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="lead_api_token_form" model="ir.ui.view">
+            <field name="name">lead.api.token.form</field>
+            <field name="model">lead.api.token</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="name"/>
+                                <field name="user_id"/>
+                                <field name="scopes"/>
+                                <field name="is_active"/>
+                            </group>
+                            <group>
+                                <field name="token" widget="password" readonly="1"/>
+                                <field name="expires_at"/>
+                                <field name="last_used"/>
+                                <field name="api_calls_count"/>
+                            </group>
+                            <group>
+                                <field name="ip_whitelist"/>
+                                <field name="rate_limit"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_lead_api_token" model="ir.actions.act_window">
+            <field name="name">API Tokens</field>
+            <field name="res_model">lead.api.token</field>
+            <field name="view_mode">list,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">Create your first API token</p>
+                <p>API tokens authenticate requests to the Lead Generation API.</p>
+            </field>
+        </record>
+
+        <menuitem id="menu_lead_api_token" name="API Tokens"
+                  parent="menu_lead_generation_root"
+                  action="action_lead_api_token"
+                  sequence="20"/>
+    </data>
+</odoo>

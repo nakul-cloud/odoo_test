@@ -45,6 +45,16 @@ class LeadAPIToken(models.Model):
             'scopes': scope,
             'expires_at': expires_at,
         })
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        # Ensure tokens created from the UI always get a value.
+        for vals in vals_list:
+            if not vals.get('token'):
+                vals['token'] = secrets.token_urlsafe(32)
+            if not vals.get('expires_at'):
+                vals['expires_at'] = fields.Datetime.now() + timedelta(days=30)
+        return super().create(vals_list)
     
     def revoke(self):
         """Revoke this token"""
