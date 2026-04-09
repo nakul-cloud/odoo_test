@@ -21,18 +21,52 @@ python odoo-bin -u lead_generation -d odoo
 
 Base URL: `http://localhost:8069`
 
-- `POST /api/leads` - Create lead
-- `GET /api/leads` - List leads (pagination and filters)
-- `GET /api/leads/<id>` - Get one lead
-- `PUT /api/leads/<id>` - Update lead
-- `DELETE /api/leads/<id>` - Archive lead
+- `POST /api/auth/token` - Create API token (email + password)
+- `POST /api/leads` - Create lead (token required)
+- `GET /api/leads` - List leads (token required)
+- `GET /api/leads/<id>` - Get one lead (token required)
+- `PUT /api/leads/<id>` - Update lead (token required)
+- `DELETE /api/leads/<id>` - Archive lead (admin token)
+- `PUT /api/leads/bulk/update` - Bulk update (write token)
+- `GET /api/leads/analytics` - Analytics (token required)
 
-## Postman Setup
+## Postman Setup (Token)
+
+1. Method: `POST`
+2. URL: `http://localhost:8069/api/auth/token`
+3. Headers:
+   - `Content-Type: application/json`
+4. Body: **raw** -> **JSON**
+
+Token request JSON:
+
+```json
+{
+  "email": "admin",
+  "password": "admin",
+  "scope": "write"
+}
+```
+
+Expected response (token):
+
+```json
+{
+  "status": "success",
+  "data": {
+    "token": "...",
+    "expires_at": "...",
+    "scope": "write"
+  }
+}
+
+## Postman Setup (Create Lead)
 
 1. Method: `POST`
 2. URL: `http://localhost:8069/api/leads`
 3. Headers:
    - `Content-Type: application/json`
+   - `Authorization: Bearer <token>`
 4. Body: **raw** -> **JSON**
 
 Example JSON:
@@ -48,20 +82,6 @@ Example JSON:
   "notes": "Test lead from API"
 }
 ```
-
-Expected response:
-
-```json
-{
-  "status": "success",
-  "data": {
-    "id": 4,
-    "name": "Rajesh Kumar",
-    "email": "rajesh@example.com",
-    "status": "new"
-  },
-  "message": "Lead created successfully"
-}
 ```
 
 ## PowerShell API Test
@@ -80,6 +100,7 @@ $body = @{
 Invoke-RestMethod -Uri "http://localhost:8069/api/leads" `
   -Method Post `
   -ContentType "application/json" `
+  -Headers @{ Authorization = "Bearer <token>" } `
   -Body $body
 ```
 
@@ -108,6 +129,12 @@ Your JSON body is empty or missing `name`.
 
 ### 4) `DUPLICATE_EMAIL`
 Lead with same email already exists. Use a new email or update the existing lead.
+
+### 5) `MISSING_TOKEN`
+API requests require `Authorization: Bearer <token>`.
+
+### 6) `PERMISSION_DENIED`
+Token has `read` scope. Use a `write` or `admin` token.
 
 ## Notes
 - Custom modules live in `custom_addons/`.

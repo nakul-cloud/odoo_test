@@ -8,8 +8,10 @@ This folder contains access rules for the Lead Generation model.
 
 ## Rules
 
-- `base.group_user`: read/write/create (no unlink)
-- `base.group_system`: full access
+- `lead.generation`: user can read/write/create (no unlink), system full
+- `lead.activity`: user read-only, system full
+- `lead.api.token`: system full
+- `lead.webhook`: system full
 
 ## Notes
 
