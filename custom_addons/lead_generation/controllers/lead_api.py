@@ -2,17 +2,25 @@
 
 import json
 import logging
+
 from odoo import http
-from odoo.http import request, jsonify
+from odoo.http import request
 
 _logger = logging.getLogger(__name__)
 
 
 class LeadAPIController(http.Controller):
     """REST API endpoints for Lead Generation"""
+
+    def _json_response(self, payload, status=200):
+        return request.make_response(
+            json.dumps(payload),
+            headers=[('Content-Type', 'application/json')],
+            status=status,
+        )
     
     # =============== CREATE (POST) ===============
-    @http.route('/api/leads', auth='public', type='json', methods=['POST'])
+    @http.route('/api/leads', auth='public', type='http', methods=['POST'], csrf=False)
     def create_lead(self):
         """
         Create a new lead
@@ -29,33 +37,33 @@ class LeadAPIController(http.Controller):
         }
         """
         try:
-            data = request.get_json_data()
+            data = request.httprequest.get_json(silent=True) or {}
             
             # Validate required fields
             if not data.get('name'):
-                return jsonify({
+                return self._json_response({
                     'status': 'error',
                     'error_code': 'MISSING_NAME',
                     'message': 'Lead name is required'
-                }), 400
+                }, status=400)
             
             if not data.get('email'):
-                return jsonify({
+                return self._json_response({
                     'status': 'error',
                     'error_code': 'MISSING_EMAIL',
                     'message': 'Email is required'
-                }), 400
+                }, status=400)
             
             # Check duplicate email
             existing = request.env['lead.generation'].search([
                 ('email', '=', data.get('email'))
             ])
             if existing:
-                return jsonify({
+                return self._json_response({
                     'status': 'error',
                     'error_code': 'DUPLICATE_EMAIL',
                     'message': f'Lead with this email already exists'
-                }), 409
+                }, status=409)
             
             # Create lead
             lead = request.env['lead.generation'].create({
@@ -71,7 +79,7 @@ class LeadAPIController(http.Controller):
             
             _logger.info(f'Lead created: {lead.id}')
             
-            return jsonify({
+            return self._json_response({
                 'status': 'success',
                 'data': {
                     'id': lead.id,
@@ -80,26 +88,19 @@ class LeadAPIController(http.Controller):
                     'status': lead.status,
                 },
                 'message': 'Lead created successfully'
-            }), 201
-        
-        except json.JSONDecodeError:
-            return jsonify({
-                'status': 'error',
-                'error_code': 'INVALID_JSON',
-                'message': 'Invalid JSON in request'
-            }), 400
+            }, status=201)
         
         except Exception as e:
             _logger.error(f'Error creating lead: {str(e)}')
-            return jsonify({
+            return self._json_response({
                 'status': 'error',
                 'error_code': 'SERVER_ERROR',
                 'message': 'An error occurred'
-            }), 500
+            }, status=500)
     
     
     # =============== READ - GET ALL (GET) ===============
-    @http.route('/api/leads', auth='public', type='json', methods=['GET'])
+    @http.route('/api/leads', auth='public', type='http', methods=['GET'], csrf=False)
     def get_all_leads(self):
         """
         Get all leads with filtering and pagination
@@ -112,11 +113,12 @@ class LeadAPIController(http.Controller):
         - search: Search in name/email
         """
         try:
-            page = int(request.args.get('page', 1))
-            limit = min(int(request.args.get('limit', 10)), 100)
-            status = request.args.get('status')
-            lead_source = request.args.get('lead_source')
-            search = request.args.get('search')
+            params = request.httprequest.args
+            page = int(params.get('page', 1))
+            limit = min(int(params.get('limit', 10)), 100)
+            status = params.get('status')
+            lead_source = params.get('lead_source')
+            search = params.get('search')
             
             # Build search domain
             domain = [('active', '=', True)]
@@ -160,7 +162,7 @@ class LeadAPIController(http.Controller):
                     'created_date': lead.create_date.strftime('%Y-%m-%d %H:%M:%S') if lead.create_date else '',
                 })
             
-            return jsonify({
+            return self._json_response({
                 'status': 'success',
                 'data': leads_data,
                 'pagination': {
@@ -170,39 +172,39 @@ class LeadAPIController(http.Controller):
                     'total_pages': (total_count + limit - 1) // limit,
                 },
                 'message': f'Retrieved {len(leads)} leads'
-            }), 200
+            }, status=200)
         
         except ValueError:
-            return jsonify({
+            return self._json_response({
                 'status': 'error',
                 'error_code': 'INVALID_PARAMETER',
                 'message': 'Invalid page or limit parameter'
-            }), 400
+            }, status=400)
         
         except Exception as e:
             _logger.error(f'Error fetching leads: {str(e)}')
-            return jsonify({
+            return self._json_response({
                 'status': 'error',
                 'error_code': 'SERVER_ERROR',
                 'message': 'An error occurred'
-            }), 500
+            }, status=500)
     
     
     # =============== READ - GET ONE (GET) ===============
-    @http.route('/api/leads/<int:lead_id>', auth='public', type='json', methods=['GET'])
+    @http.route('/api/leads/<int:lead_id>', auth='public', type='http', methods=['GET'], csrf=False)
     def get_lead(self, lead_id):
         """Get a specific lead by ID"""
         try:
             lead = request.env['lead.generation'].browse(lead_id)
             
             if not lead.exists():
-                return jsonify({
+                return self._json_response({
                     'status': 'error',
                     'error_code': 'NOT_FOUND',
                     'message': f'Lead with ID {lead_id} not found'
-                }), 404
+                }, status=404)
             
-            return jsonify({
+            return self._json_response({
                 'status': 'success',
                 'data': {
                     'id': lead.id,
@@ -218,19 +220,19 @@ class LeadAPIController(http.Controller):
                     'created_date': lead.create_date.strftime('%Y-%m-%d %H:%M:%S') if lead.create_date else '',
                 },
                 'message': 'Lead retrieved successfully'
-            }), 200
+            }, status=200)
         
         except Exception as e:
             _logger.error(f'Error fetching lead {lead_id}: {str(e)}')
-            return jsonify({
+            return self._json_response({
                 'status': 'error',
                 'error_code': 'SERVER_ERROR',
                 'message': 'An error occurred'
-            }), 500
+            }, status=500)
     
     
     # =============== UPDATE (PUT) ===============
-    @http.route('/api/leads/<int:lead_id>', auth='public', type='json', methods=['PUT'])
+    @http.route('/api/leads/<int:lead_id>', auth='public', type='http', methods=['PUT'], csrf=False)
     def update_lead(self, lead_id):
         """
         Update a lead
@@ -246,13 +248,13 @@ class LeadAPIController(http.Controller):
             lead = request.env['lead.generation'].browse(lead_id)
             
             if not lead.exists():
-                return jsonify({
+                return self._json_response({
                     'status': 'error',
                     'error_code': 'NOT_FOUND',
                     'message': f'Lead with ID {lead_id} not found'
-                }), 404
+                }, status=404)
             
-            data = request.get_json_data()
+            data = request.httprequest.get_json(silent=True) or {}
             
             # Allowed fields to update
             allowed_fields = [
@@ -267,18 +269,18 @@ class LeadAPIController(http.Controller):
                     update_data[field] = data[field]
             
             if not update_data:
-                return jsonify({
+                return self._json_response({
                     'status': 'error',
                     'error_code': 'NO_DATA',
                     'message': 'No valid fields to update'
-                }), 400
+                }, status=400)
             
             # Update lead
             lead.write(update_data)
             
             _logger.info(f'Lead {lead_id} updated')
             
-            return jsonify({
+            return self._json_response({
                 'status': 'success',
                 'data': {
                     'id': lead.id,
@@ -286,52 +288,45 @@ class LeadAPIController(http.Controller):
                     'status': lead.status,
                 },
                 'message': 'Lead updated successfully'
-            }), 200
-        
-        except json.JSONDecodeError:
-            return jsonify({
-                'status': 'error',
-                'error_code': 'INVALID_JSON',
-                'message': 'Invalid JSON in request'
-            }), 400
+            }, status=200)
         
         except Exception as e:
             _logger.error(f'Error updating lead {lead_id}: {str(e)}')
-            return jsonify({
+            return self._json_response({
                 'status': 'error',
                 'error_code': 'SERVER_ERROR',
                 'message': 'An error occurred'
-            }), 500
+            }, status=500)
     
     
     # =============== DELETE (DELETE) ===============
-    @http.route('/api/leads/<int:lead_id>', auth='public', type='json', methods=['DELETE'])
+    @http.route('/api/leads/<int:lead_id>', auth='public', type='http', methods=['DELETE'], csrf=False)
     def delete_lead(self, lead_id):
         """Delete/Archive a lead (soft delete)"""
         try:
             lead = request.env['lead.generation'].browse(lead_id)
             
             if not lead.exists():
-                return jsonify({
+                return self._json_response({
                     'status': 'error',
                     'error_code': 'NOT_FOUND',
                     'message': f'Lead with ID {lead_id} not found'
-                }), 404
+                }, status=404)
             
             # Archive instead of delete
             lead.write({'active': False})
             
             _logger.info(f'Lead {lead_id} archived')
             
-            return jsonify({
+            return self._json_response({
                 'status': 'success',
                 'message': f'Lead {lead_id} deleted successfully'
-            }), 200
+            }, status=200)
         
         except Exception as e:
             _logger.error(f'Error deleting lead {lead_id}: {str(e)}')
-            return jsonify({
+            return self._json_response({
                 'status': 'error',
                 'error_code': 'SERVER_ERROR',
                 'message': 'An error occurred'
-            }), 500
+            }, status=500)
