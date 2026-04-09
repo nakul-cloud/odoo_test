@@ -18,6 +18,11 @@ class LeadAPIController(http.Controller):
             headers=[('Content-Type', 'application/json')],
             status=status,
         )
+
+    def _ensure_db(self):
+        # Ensure a database is selected for public API requests.
+        if not request.session.db:
+            request.session.db = request.params.get('db') or 'odoo'
     
     # =============== CREATE (POST) ===============
     @http.route('/api/leads', auth='public', type='http', methods=['POST'], csrf=False)
@@ -37,6 +42,7 @@ class LeadAPIController(http.Controller):
         }
         """
         try:
+            self._ensure_db()
             data = request.httprequest.get_json(silent=True) or {}
             
             # Validate required fields
@@ -55,7 +61,7 @@ class LeadAPIController(http.Controller):
                 }, status=400)
             
             # Check duplicate email
-            existing = request.env['lead.generation'].search([
+            existing = request.env['lead.generation'].sudo().search([
                 ('email', '=', data.get('email'))
             ])
             if existing:
@@ -66,7 +72,7 @@ class LeadAPIController(http.Controller):
                 }, status=409)
             
             # Create lead
-            lead = request.env['lead.generation'].create({
+            lead = request.env['lead.generation'].sudo().create({
                 'name': data.get('name'),
                 'email': data.get('email'),
                 'phone': data.get('phone', ''),
@@ -91,11 +97,11 @@ class LeadAPIController(http.Controller):
             }, status=201)
         
         except Exception as e:
-            _logger.error(f'Error creating lead: {str(e)}')
+            _logger.exception('Error creating lead')
             return self._json_response({
                 'status': 'error',
                 'error_code': 'SERVER_ERROR',
-                'message': 'An error occurred'
+                'message': str(e)
             }, status=500)
     
     
@@ -113,6 +119,7 @@ class LeadAPIController(http.Controller):
         - search: Search in name/email
         """
         try:
+            self._ensure_db()
             params = request.httprequest.args
             page = int(params.get('page', 1))
             limit = min(int(params.get('limit', 10)), 100)
@@ -136,11 +143,11 @@ class LeadAPIController(http.Controller):
                 ))
             
             # Count total
-            total_count = request.env['lead.generation'].search_count(domain)
+            total_count = request.env['lead.generation'].sudo().search_count(domain)
             
             # Fetch leads
             offset = (page - 1) * limit
-            leads = request.env['lead.generation'].search(
+            leads = request.env['lead.generation'].sudo().search(
                 domain,
                 offset=offset,
                 limit=limit,
@@ -182,11 +189,11 @@ class LeadAPIController(http.Controller):
             }, status=400)
         
         except Exception as e:
-            _logger.error(f'Error fetching leads: {str(e)}')
+            _logger.exception('Error fetching leads')
             return self._json_response({
                 'status': 'error',
                 'error_code': 'SERVER_ERROR',
-                'message': 'An error occurred'
+                'message': str(e)
             }, status=500)
     
     
@@ -195,7 +202,8 @@ class LeadAPIController(http.Controller):
     def get_lead(self, lead_id):
         """Get a specific lead by ID"""
         try:
-            lead = request.env['lead.generation'].browse(lead_id)
+            self._ensure_db()
+            lead = request.env['lead.generation'].sudo().browse(lead_id)
             
             if not lead.exists():
                 return self._json_response({
@@ -223,11 +231,11 @@ class LeadAPIController(http.Controller):
             }, status=200)
         
         except Exception as e:
-            _logger.error(f'Error fetching lead {lead_id}: {str(e)}')
+            _logger.exception('Error fetching lead %s', lead_id)
             return self._json_response({
                 'status': 'error',
                 'error_code': 'SERVER_ERROR',
-                'message': 'An error occurred'
+                'message': str(e)
             }, status=500)
     
     
@@ -245,7 +253,8 @@ class LeadAPIController(http.Controller):
         }
         """
         try:
-            lead = request.env['lead.generation'].browse(lead_id)
+            self._ensure_db()
+            lead = request.env['lead.generation'].sudo().browse(lead_id)
             
             if not lead.exists():
                 return self._json_response({
@@ -291,11 +300,11 @@ class LeadAPIController(http.Controller):
             }, status=200)
         
         except Exception as e:
-            _logger.error(f'Error updating lead {lead_id}: {str(e)}')
+            _logger.exception('Error updating lead %s', lead_id)
             return self._json_response({
                 'status': 'error',
                 'error_code': 'SERVER_ERROR',
-                'message': 'An error occurred'
+                'message': str(e)
             }, status=500)
     
     
@@ -304,7 +313,8 @@ class LeadAPIController(http.Controller):
     def delete_lead(self, lead_id):
         """Delete/Archive a lead (soft delete)"""
         try:
-            lead = request.env['lead.generation'].browse(lead_id)
+            self._ensure_db()
+            lead = request.env['lead.generation'].sudo().browse(lead_id)
             
             if not lead.exists():
                 return self._json_response({
@@ -324,9 +334,9 @@ class LeadAPIController(http.Controller):
             }, status=200)
         
         except Exception as e:
-            _logger.error(f'Error deleting lead {lead_id}: {str(e)}')
+            _logger.exception('Error deleting lead %s', lead_id)
             return self._json_response({
                 'status': 'error',
                 'error_code': 'SERVER_ERROR',
-                'message': 'An error occurred'
+                'message': str(e)
             }, status=500)
