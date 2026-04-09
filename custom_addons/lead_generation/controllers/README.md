@@ -36,38 +36,6 @@ Implementation details:
 - Uses `sudo()` to allow public access for testing.
 - Ensures a database is selected for public requests (`request.session.db`).
 
-## Models
-
-File: `../models/lead.py`
-
-Model: `lead.generation`
-
-Key fields:
-- `name` (required)
-- `email` (required)
-- `phone`, `company`
-- `lead_source` (Selection)
-- `status` (Selection)
-- `budget`, `expected_closing_date`, `notes`
-- `active`
-
-## Views
-
-File: `../views/lead_views.xml`
-
-- Form view
-- List view (Odoo 19 uses `<list>`)
-- Search view with filters
-- Menu: Lead Generation -> Leads
-
-## Security
-
-File: `../security/ir.model.access.csv`
-
-Access rules:
-- `base.group_user`: read/write/create (no unlink)
-- `base.group_system`: full access
-
 ## Postman Quick Test
 
 Headers:
