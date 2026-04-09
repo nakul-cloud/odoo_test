@@ -1,9 +1,9 @@
 {
     'name': 'Lead Generation',
-    'version': '19.0.1.0.0',
+    'version': '19.0.2.0.0',  # Bumped version
     'category': 'Sales',
-    'summary': 'Manage property leads and follow-ups',
-    'description': 'Custom module for capturing and managing property sales leads',
+    'summary': 'Manage property leads and follow-ups with REST API',
+    'description': 'Custom module for capturing and managing property sales leads with REST API endpoints',
     'author': 'Nakul',
     'depends': ['base', 'crm'],
     'data': [
