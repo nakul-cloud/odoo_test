@@ -11,6 +11,7 @@ class Lead(models.Model):
     phone = fields.Char(string='Phone Number')
     company = fields.Char(string='Company Name')
     
+    # Lead source helps reporting and attribution.
     lead_source = fields.Selection([
         ('website', 'Website'),
         ('phone', 'Phone Call'),
@@ -31,6 +32,9 @@ class Lead(models.Model):
         ('lost', 'Lost'),
     ], string='Status', default='new', required=True)
     
+    # Optional ownership for routing and accountability.
+    user_id = fields.Many2one('res.users', string='Assigned User')
+
     budget = fields.Float(string='Budget')
     expected_closing_date = fields.Date(string='Expected Closing Date')
     notes = fields.Text(string='Notes')

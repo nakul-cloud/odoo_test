@@ -22,6 +22,7 @@
                             <group>
                                 <field name="lead_source"/>
                                 <field name="status"/>
+                                <field name="user_id"/>
                                 <field name="active"/>
                             </group>
                         </group>
@@ -48,6 +49,7 @@
                     <field name="phone"/>
                     <field name="lead_source"/>
                     <field name="status"/>
+                    <field name="user_id"/>
                     <field name="budget"/>
                 </list>
             </field>

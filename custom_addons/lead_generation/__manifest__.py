@@ -9,6 +9,7 @@
     'data': [
         'security/ir.model.access.csv',
         'views/lead_views.xml',
+        'views/lead_admin_views.xml',
     ],
     'installable': True,
     'application': True,

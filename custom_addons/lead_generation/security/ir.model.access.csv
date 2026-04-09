@@ -1,3 +1,7 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_lead_generation_user,lead.generation user,model_lead_generation,base.group_user,1,1,1,0
 access_lead_generation_system,lead.generation system,model_lead_generation,base.group_system,1,1,1,1
+access_lead_activity_user,lead.activity user,model_lead_activity,base.group_user,1,0,0,0
+access_lead_activity_system,lead.activity system,model_lead_activity,base.group_system,1,1,1,1
+access_lead_api_token_system,lead.api.token system,model_lead_api_token,base.group_system,1,1,1,1
+access_lead_webhook_system,lead.webhook system,model_lead_webhook,base.group_system,1,1,1,1
